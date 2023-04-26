@@ -2,15 +2,9 @@
 
 This fork adds the following feature:
 
-<<<<<<< HEAD
-- Improve the original Vagrant execution deploying a Kubernetes cluster of 3 nodes (1 master and 2 workers) for the latest version, v1.27.1, without manual intervention.
+- Improve the oeriginal Vagrant deployment by creating a Kubernetes cluster of 3 nodes (1 master and 2 workers) for its latest version, v1.27.1.
 
-After installing Vagrant in your local PC/Mac, just execute:
-=======
-- Improve the Vagrant deployment by creating a Kubernetes cluster of 3 nodes (1 master and 2 workers) for its latest version, v1.27.1.
-
-After installing Vagrant in your local PC, deploy the entire cluster executing:
->>>>>>> 7dcf4ae225e6e139206071ae1c4ef85689aa5ef1
+After installing Vagrant in your local PC/Mac, to deploy the entire cluster just execute:
 
 ```
 vagrant up
