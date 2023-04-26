@@ -54,44 +54,56 @@ Vagrant.configure("2") do |config|
 
   # Provision Master Nodes
   (1..NUM_MASTER_NODE).each do |i|
-      config.vm.define "kubemaster" do |node|
-        # Name shown in the GUI
-        node.vm.provider "virtualbox" do |vb|
-            vb.name = "kubemaster"
-            vb.memory = 2048
-            vb.cpus = 2
-        end
-        node.vm.hostname = "kubemaster"
-        node.vm.network :private_network, ip: IP_NW + "#{MASTER_IP_START + i}"
-        node.vm.network "forwarded_port", guest: 22, host: "#{2710 + i}"
-
-        node.vm.provision "setup-hosts", :type => "shell", :path => "ubuntu/vagrant/setup-hosts.sh" do |s|
-          s.args = ["enp0s8"]
-        end
-
-        node.vm.provision "setup-dns", type: "shell", :path => "ubuntu/update-dns.sh"
-
+    config.vm.define "kubemaster" do |node|
+      # Name shown in the GUI
+      node.vm.provider "virtualbox" do |vb|
+        vb.name = "kubemaster"
+        vb.memory = 2048
+        vb.cpus = 2
       end
+
+      node.vm.hostname = "kubemaster"
+      node.vm.network :private_network, ip: IP_NW + "#{MASTER_IP_START + i}"
+      node.vm.network "forwarded_port", guest: 22, host: "#{2710 + i}"
+
+      node.vm.provision "setup-hosts", :type => "shell", :path => "ubuntu/vagrant/setup-hosts.sh" do |s|
+        s.args = ["enp0s8"]
+      end
+
+      node.vm.provision "setup-dns", type: "shell", :path => "ubuntu/update-dns.sh"
+      node.vm.provision "cluster-setup", type: "shell", :path => "ubuntu/cluster-install-tasks.sh"
+      node.vm.provision "master-setup", type: "shell", args: "#{i}", :path => "ubuntu/master-priv-tasks.sh"
+      node.vm.provision "master-post-setup", type: "shell", privileged: false, :path => "ubuntu/master-nonpriv-tasks.sh"
+
+    end
   end
 
 
   # Provision Worker Nodes
   (1..NUM_WORKER_NODE).each do |i|
     config.vm.define "kubenode0#{i}" do |node|
-        node.vm.provider "virtualbox" do |vb|
-            vb.name = "kubenode0#{i}"
-            vb.memory = 2048
-            vb.cpus = 2
-        end
-        node.vm.hostname = "kubenode0#{i}"
-        node.vm.network :private_network, ip: IP_NW + "#{NODE_IP_START + i}"
-                node.vm.network "forwarded_port", guest: 22, host: "#{2720 + i}"
+      node.vm.provider "virtualbox" do |vb|
+        vb.name = "kubenode0#{i}"
+        vb.memory = 2048
+        vb.cpus = 2
+      end
 
-        node.vm.provision "setup-hosts", :type => "shell", :path => "ubuntu/vagrant/setup-hosts.sh" do |s|
-          s.args = ["enp0s8"]
-        end
+      node.vm.hostname = "kubenode0#{i}"
+      node.vm.network :private_network, ip: IP_NW + "#{NODE_IP_START + i}"
+      node.vm.network "forwarded_port", guest: 22, host: "#{2720 + i}"
 
-        node.vm.provision "setup-dns", type: "shell", :path => "ubuntu/update-dns.sh"
+      node.vm.provision "setup-hosts", :type => "shell", :path => "ubuntu/vagrant/setup-hosts.sh" do |s|
+        s.args = ["enp0s8"]
+      end
+
+      node.vm.provision "setup-dns", type: "shell", :path => "ubuntu/update-dns.sh"
+      node.vm.provision "cluster-setup-tasks", type: "shell", :path => "ubuntu/cluster-install-tasks.sh"
+
+      (1..NUM_MASTER_NODE).each do |m|
+        node.vm.provision "add-node", :type => "shell", :path => "ubuntu/#{m}_add_node.sh"
+      end
+
     end
   end
+
 end
